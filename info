@@ -1,0 +1,8 @@
+The .next Folder Contains
+Based on your workspace structure, the .next folder contains:
+
+Build artifacts (compiled pages, chunks, manifests)
+Development cache (faster rebuilds)
+Route information (app routes, pages)
+Server components (RSC payload)
+Static assets (optimized images, fonts)
