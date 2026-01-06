@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Pencil, Trash2, Save, X } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
@@ -21,11 +21,11 @@ interface InventoryItem {
 export default function InventoryPage() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editFormData, setEditFormData] = useState({
     name: "",
-    category: "BEVERAGE",
-    quantity: "",
+    category: "",
+    currentStock: 0,
   });
 
   // Pagination
@@ -38,7 +38,12 @@ export default function InventoryPage() {
 
   const fetchInventory = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/inventory`);
+      const token = localStorage.getItem("accessToken");
+      const response = await fetch(`${API_BASE_URL}/api/inventory`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         setItems(data.data || []);
@@ -50,38 +55,68 @@ export default function InventoryPage() {
     }
   };
 
-  const handleAddItem = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleEdit = (item: InventoryItem) => {
+    setEditingId(item.id);
+    setEditFormData({
+      name: item.name,
+      category: item.category,
+      currentStock: item.currentStock,
+    });
+  };
 
-    // Validate quantity
-    if (!formData.quantity || isNaN(Number(formData.quantity))) {
-      alert("Please enter a valid quantity");
-      return;
-    }
+  const handleCancel = () => {
+    setEditingId(null);
+    setEditFormData({ name: "", category: "", currentStock: 0 });
+  };
 
+  const handleSave = async (id: number) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/inventory`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name,
-          category: formData.category,
-          currentStock: Number(formData.quantity),
-        }),
+      const token = localStorage.getItem("accessToken");
+      const response = await fetch(`${API_BASE_URL}/api/inventory/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(editFormData),
       });
 
       if (response.ok) {
-        alert("Item added successfully!");
-        setFormData({ name: "", category: "BEVERAGE", quantity: "" });
-        setShowForm(false);
+        alert("Item updated successfully!");
+        setEditingId(null);
         fetchInventory();
       } else {
         const error = await response.json();
-        alert(error.message || "Failed to add item");
+        alert(error.message || "Failed to update item");
       }
     } catch (error) {
-      console.error("Failed to add item:", error);
-      alert("Failed to add item");
+      console.error("Failed to update item:", error);
+      alert("Failed to update item");
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this item?")) return;
+
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await fetch(`${API_BASE_URL}/api/inventory/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        alert("Item deleted successfully!");
+        fetchInventory();
+      } else {
+        const error = await response.json();
+        alert(error.message || "Failed to delete item");
+      }
+    } catch (error) {
+      console.error("Failed to delete item:", error);
+      alert("Failed to delete item");
     }
   };
 
@@ -106,79 +141,12 @@ export default function InventoryPage() {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Inventory</h1>
-          <p className="text-gray-500">Manage stock items</p>
-        </div>
-        <Button onClick={() => setShowForm(!showForm)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Item
-        </Button>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Inventory</h1>
+        <p className="text-gray-500">Manage stock items</p>
       </div>
 
-      {/* Add Form */}
-      {showForm && (
-        <form
-          onSubmit={handleAddItem}
-          className="mb-6 p-4 border rounded-lg space-y-4"
-        >
-          <div className="grid md:grid-cols-3 gap-4">
-            <div>
-              <Label>Item Name</Label>
-              <Input
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                required
-              />
-            </div>
-
-            <div>
-              <Label>Category</Label>
-              <select
-                value={formData.category}
-                onChange={(e) =>
-                  setFormData({ ...formData, category: e.target.value })
-                }
-                className="w-full border rounded px-3 py-2"
-              >
-                <option>BEVERAGE</option>
-                <option>FOOD</option>
-                <option>UTENSILS</option>
-                <option>CLEANING</option>
-                <option>OTHER</option>
-              </select>
-            </div>
-
-            <div>
-              <Label>Quantity</Label>
-              <Input
-                type="number"
-                value={formData.quantity}
-                onChange={(e) =>
-                  setFormData({ ...formData, quantity: e.target.value })
-                }
-                required
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <Button type="submit">Add</Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowForm(false)}
-            >
-              Cancel
-            </Button>
-          </div>
-        </form>
-      )}
-
-      {/* Inventory Table */}
+    
       <div className="overflow-auto border rounded-lg">
         <table className="w-full min-w-[800px]">
           <thead className="bg-gray-100 sticky top-0">
@@ -187,8 +155,8 @@ export default function InventoryPage() {
               <th className="px-4 py-2 text-left">Product</th>
               <th className="px-4 py-2 text-left">Category</th>
               <th className="px-4 py-2 text-left">Stock</th>
-              <th className="px-4 py-2 text-left">Quality</th>
               <th className="px-4 py-2 text-left">Supplier</th>
+              <th className="px-4 py-2 text-center">Action</th>
             </tr>
           </thead>
 
@@ -196,11 +164,86 @@ export default function InventoryPage() {
             {currentItems.map((item, index) => (
               <tr key={item.id} className="border-t">
                 <td className="px-4 py-2">{(currentPage - 1) * rowsPerPage + index + 1}</td>
-                <td className="px-4 py-2 font-medium">{item.name}</td>
-                <td className="px-4 py-2">{item.category}</td>
-                <td className="px-4 py-2">{item.currentStock}</td>
-                <td className="px-4 py-2">{item.quality}</td>
-                <td className="px-4 py-2">{item.supplier}</td>
+                <td className="px-4 py-2 font-medium">
+                  {editingId === item.id ? (
+                    <Input
+                      value={editFormData.name}
+                      onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                      className="w-full"
+                    />
+                  ) : (
+                    item.name
+                  )}
+                </td>
+                <td className="px-4 py-2">
+                  {editingId === item.id ? (
+                    <select
+                      value={editFormData.category}
+                      onChange={(e) => setEditFormData({ ...editFormData, category: e.target.value })}
+                      className="w-full border rounded px-2 py-1"
+                    >
+                      <option>BEVERAGE</option>
+                      <option>FOOD</option>
+                      <option>UTENSILS</option>
+                      <option>CLEANING</option>
+                      <option>OTHER</option>
+                    </select>
+                  ) : (
+                    item.category
+                  )}
+                </td>
+                <td className="px-4 py-2">
+                  {editingId === item.id ? (
+                    <Input
+                      type="number"
+                      value={editFormData.currentStock}
+                      onChange={(e) => setEditFormData({ ...editFormData, currentStock: Number(e.target.value) })}
+                      className="w-20"
+                    />
+                  ) : (
+                    item.currentStock
+                  )}
+                </td>
+                <td className="px-4 py-2">{item.supplier || "-"}</td>
+                <td className="px-4 py-2">
+                  <div className="flex gap-2 justify-center">
+                    {editingId === item.id ? (
+                      <>
+                        <Button
+                          size="sm"
+                          onClick={() => handleSave(item.id)}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <Save className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleCancel}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEdit(item)}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>

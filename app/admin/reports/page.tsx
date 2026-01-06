@@ -41,7 +41,7 @@ export default function ReportsPage() {
       const response = await fetch(`${API_BASE_URL}/api/reports/allreport`)
       if (response.ok) {
         const data = await response.json()
-        setReports(data.data) // ✅ must match your API response: data.data
+        setReports(data.data)
       }
     } catch (error) {
       console.error("Failed to fetch report:", error)
@@ -64,7 +64,7 @@ export default function ReportsPage() {
 
       {reports && (
         <>
-          {/* ---------------- SALES REPORT ---------------- */}
+         
           <h2 className="text-2xl font-semibold mb-4">Sales Report</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <Card>
@@ -93,7 +93,7 @@ export default function ReportsPage() {
             </CardContent>
           </Card>
 
-          {/* ---------------- INVENTORY REPORT ---------------- */}
+        
           <h2 className="text-2xl font-semibold mb-4">Inventory Report</h2>
           <Card className="mb-4">
             <CardHeader><CardTitle>Total Items</CardTitle></CardHeader>
@@ -127,7 +127,7 @@ export default function ReportsPage() {
             </CardContent>
           </Card>
 
-          {/* ---------------- RESERVATION REPORT ---------------- */}
+          
           <h2 className="text-2xl font-semibold mb-4">Reservation Report</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <Card>

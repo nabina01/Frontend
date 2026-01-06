@@ -32,6 +32,13 @@ export default function CustomerNavbar() {
           {/* Navigation Links */}
           <div className="hidden md:flex items-center gap-8">
             <Link
+              href="/customer/home"
+              className="text-foreground hover:text-primary transition-colors flex items-center gap-2"
+            >
+              <Home className="w-4 h-4" />
+              Home
+            </Link>
+            <Link
               href="/customer/menu"
               className="text-foreground hover:text-primary transition-colors flex items-center gap-2"
             >

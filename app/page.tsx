@@ -1,255 +1,500 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card"
-import { Button } from "@/src/components/ui/button"
-import { Input } from "@/src/components/ui/input"
-import { Label } from "@/src/components/ui/label"
-import { Loader2, Calendar, Users, Clock } from "lucide-react"
-import { useAuth } from "@/src/context/auth-context"
+import { Button } from "@/src/components/ui/button";
+import { Coffee, Cake } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:2004"
-
-interface Reservation {
-  id: string
-  numberOfPeople: number
-  reservationTime: string
-  tablenumber: number
-  status: string
-}
-
-export default function ReservationsPage() {
-  const { isAuthenticated } = useAuth()
-  const [reservations, setReservations] = useState<Reservation[]>([])
-  const [loading, setLoading] = useState(true)
-  const [date, setDate] = useState("")
-  const [time, setTime] = useState("")
-  const [people, setPeople] = useState("2")
-  const [notes, setNotes] = useState("")
-  const [tableNumber, setTableNumber] = useState("")
-  const [successMessage, setSuccessMessage] = useState("")
-
-  //  Get token from localStorage
-  const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null
-
-  useEffect(() => {
-    if (isAuthenticated) fetchReservations()
-  }, [isAuthenticated])
-
-  const fetchReservations = async () => {
-    setLoading(true)
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/reservations/userid`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // include token here
-        },
-      })
-
-      if (res.ok) {
-        const data = await res.json()
-        setReservations(data.data)
-      } else {
-        console.error("Failed to fetch reservations")
-      }
-    } catch (err) {
-      console.error("Fetch reservations error:", err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleBookTable = async (e: React.FormEvent) => {
-    e.preventDefault()
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/reservations`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // include token here
-        },
-        body: JSON.stringify({
-          reservationTime: `${date}T${time}`,
-          numberOfPeople: Number.parseInt(people),
-          specialRequests: notes,
-          tablenumber: Number.parseInt(tableNumber),
-        }),
-      })
-
-      if (res.ok) {
-        setSuccessMessage("Reservation booked successfully!")
-        setTimeout(() => setSuccessMessage(""), 3000)
-
-        // Reset form
-        setDate("")
-        setTime("")
-        setPeople("2")
-        setNotes("")
-        setTableNumber("")
-
-        fetchReservations()
-      } else {
-        const errorData = await res.json()
-        console.error("Booking error:", errorData)
-        setSuccessMessage(errorData.message || "Failed to book reservation")
-        setTimeout(() => setSuccessMessage(""), 3000)
-      }
-    } catch (err) {
-      console.error("Booking failed:", err)
-      setSuccessMessage("Booking failed")
-      setTimeout(() => setSuccessMessage(""), 3000)
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    )
-  }
+export default function Home() {
+  const router = useRouter();
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold text-foreground mb-4">Table Reservations</h1>
+    <div className="min-h-screen" style={{ backgroundColor: "#b49977ff" }}>
+      {/* Navigation */}
+      <nav
+        className="sticky top-0 z-50 backdrop-blur border-b border-border"
+        style={{ backgroundColor: "#5d5042ff" }}
+      >
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Coffee className="w-8 h-8 text-primary" />
+            <h1 className="text-3xl font-bold text-foreground">Aromalaya</h1>
+          </div>
+          <div className="hidden md:flex items-center gap-8">
+            <a
+              href="#story"
+              className="text-foreground/120 hover:text-foreground transition"
+            >
+              All About Us
+            </a>
+            <a
+              href="#services"
+              className="text-foreground/120 hover:text-foreground transition"
+            >
+              Our Services
+            </a>
 
-      {/* Success message */}
-      {successMessage && (
-        <div className="mb-4 p-3 bg-green-100 text-green-800 rounded">{successMessage}</div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Booking Form */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Book a Table</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleBookTable} className="space-y-4">
-                <div>
-                  <Label htmlFor="date">Date</Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="time">Time</Label>
-                  <Input
-                    id="time"
-                    type="time"
-                    value={time}
-                    onChange={(e) => setTime(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="people">Number of People</Label>
-                  <Input
-                    id="people"
-                    type="number"
-                    min="1"
-                    max="7"
-                    value={people}
-                    onChange={(e) => setPeople(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="tableNumber">Table Number</Label>
-                  <Input
-                    id="tableNumber"
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={tableNumber}
-                    onChange={(e) => setTableNumber(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="notes">Special Requests</Label>
-                  <textarea
-                    id="notes"
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-card text-foreground"
-                    rows={3}
-                    placeholder="Any special requests?"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                  />
-                </div>
-
-                <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                  Book Table
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+            <a
+              href="#menu"
+              className="text-foreground/120 hover:text-foreground transition"
+            >
+              Menu
+            </a>
+            <a
+              href="#menu"
+              className="text-foreground/100 hover:text-foreground transition"
+              onClick={() => router.push("/login")}
+            >
+              Login
+            </a>
+          </div>
         </div>
+      </nav>
 
-        {/* Reservations List */}
-        <div className="lg:col-span-2">
-          {reservations && reservations.length > 0 ? (
-            <div className="space-y-4">
-              {reservations.map((reservation) => (
-                <Card key={reservation.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-foreground">
-                        Reservation (Table {reservation.tablenumber})
-                      </h3>
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                          reservation.status === "CONFIRMED"
-                            ? "bg-green-100 text-green-800"
-                            : reservation.status === "PENDING"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {reservation.status}
-                      </span>
-                    </div>
+      {/* Hero Section */}
+      <section
+        className="relative bg-gradient-to-b from-secondary to-background px-4 md:px-6 py-24 md:py-32"
+        style={{ backgroundColor: "#8B5E3C" }}
+      >
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center space-y-6 md:space-y-8">
+            <h2 className="text-5xl md:text-7xl font-serif text-foreground leading-tight text-balance">
+              Authentic Nepali Flavors & Cozy Cafe Vibes
+            </h2>
+            <p className="text-lg md:text-xl text-foreground/70 max-w-2xl mx-auto text-balance">
+              Experience a warm, inviting space where authentic Nepali cuisine
+              meets artisan coffee culture
+            </p>
+          </div>
+        </div>
+      </section>
 
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Calendar className="w-4 h-4" />
-                        {new Date(reservation.reservationTime).toLocaleDateString()}
-                      </div>
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Clock className="w-4 h-4" />
-                        {new Date(reservation.reservationTime).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </div>
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Users className="w-4 h-4" />
-                        {reservation.numberOfPeople} people
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+      {/* Our Story Section */}
+      <section
+        id="story"
+        className="px-4 md:px-6 py-20 md:py-28"
+        style={{ backgroundColor: "#614f43ff" }}
+      >
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Left: Text */}
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <h2 className="text-4xl md:text-5xl font-serif text-foreground">
+                  All About Us
+                </h2>
+                <div className="w-12 h-1 bg-primary rounded-full"></div>
+              </div>
+
+              <p className="text-lg text-foreground/70 leading-relaxed">
+                Aromalaya started with a vision to bring authentic Nepali
+                flavors and cozy cafe vibes together. Our mission is to create a
+                warm, inviting space for everyone who loves great coffee and
+                freshly baked treats. We believe that every cup of coffee and
+                every pastry tells a story of dedication, passion, and cultural
+                heritage.
+              </p>
+
+              <div
+                className="rounded-xl p-8 border border-primary/20"
+                style={{ backgroundColor: "#eae3ddff" }}
+              >
+                <p className="text-lg text-foreground/90 leading-relaxed">
+                  "We believe that great coffee and fresh pastries are made with
+                  heart, and that's exactly what we bring to our craft every
+                  single day."
+                </p>
+              </div>
             </div>
-          ) : (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <p className="text-muted-foreground">No reservations yet</p>
-              </CardContent>
-            </Card>
-          )}
+
+            {/* Right: Image */}
+            <div className="rounded-2xl overflow-hidden shadow-lg">
+              <img
+                src="/cafe.jpeg"
+                alt="Aromalaya Cafe Interior"
+                className="w-full h-full object-cover rounded-2xl"
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* Statistics / Results Section */}
+      <section
+        className="px-4 md:px-6 py-20 md:py-28 bg-background/5"
+        style={{ backgroundColor: "#614f43ff" }}
+      >
+        <div className="max-w-6xl mx-auto text-center space-y-12">
+          <h2 className="text-4xl md:text-5xl font-bold text-foreground">
+            Start getting results with Eat App
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+            {/* 10M Reservations */}
+            <div className="bg-background border border-border rounded-xl p-8 shadow hover:shadow-lg transition space-y-3">
+              <div className="text-3xl font-bold text-foreground">10M</div>
+              <div className="text-lg font-semibold text-foreground/90">
+                Reservations
+              </div>
+              <div className="text-sm text-foreground/70">processed</div>
+            </div>
+
+            {/* 25% Reduction */}
+            <div className="bg-background border border-border rounded-xl p-8 shadow hover:shadow-lg transition space-y-3">
+              <div className="text-3xl font-bold text-foreground">25%</div>
+              <div className="text-lg font-semibold text-foreground/90">
+                Reduction
+              </div>
+              <div className="text-sm text-foreground/70">in no-shows</div>
+            </div>
+
+            {/* 500K Staff hours */}
+            <div className="bg-background border border-border rounded-xl p-8 shadow hover:shadow-lg transition space-y-3">
+              <div className="text-3xl font-bold text-foreground">500K</div>
+              <div className="text-lg font-semibold text-foreground/90">
+                Staff hours
+              </div>
+              <div className="text-sm text-foreground/70">saved</div>
+            </div>
+
+            {/* 300% Increased feedback */}
+            <div className="bg-background border border-border rounded-xl p-8 shadow hover:shadow-lg transition space-y-3">
+              <div className="text-3xl font-bold text-foreground">300%</div>
+              <div className="text-lg font-semibold text-foreground/90">
+                Increased
+              </div>
+              <div className="text-sm text-foreground/70">
+                feedback responses
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section
+        className="px-4 md:px-6 py-20 md:py-28"
+        style={{ backgroundColor: "#614f43ff" }}
+      >
+        <div className="max-w-4xl mx-auto text-center space-y-8">
+          <h2
+            className="text-4xl md:text-5xl font-serif"
+            style={{ color: "#F5EDE3" }}
+          >
+            Ready to Experience Aromalaya?
+          </h2>
+
+          <p className="text-lg max-w-2xl mx-auto" style={{ color: "#E8DFD1" }}>
+            Join us for an authentic Nepali cafe experience filled with warmth,
+            great coffee, and delicious treats.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center"></div>
+        </div>
+      </section>
+      {/* Services Section */}
+      <section
+        id="services"
+        className="px-4 md:px-6 py-20 md:py-28"
+        style={{ backgroundColor: "#836548ff" }}
+      >
+        <div className="max-w-6xl mx-auto space-y-12">
+          <div className="text-center space-y-4">
+            <h2 className="text-4xl md:text-5xl font-serif text-foreground">
+              Our Services
+            </h2>
+            <div className="w-12 h-1 bg-primary mx-auto rounded-full"></div>
+            <p className="text-lg text-foreground/70 max-w-3xl mx-auto">
+              At Aromalaya, we go beyond great taste — we focus on creating a
+              relaxing, welcoming environment and convenient services for every
+              guest.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-background border border-border rounded-xl p-8 space-y-3 hover:border-primary/30 transition">
+              <h3 className="text-xl font-semibold text-foreground">
+                Dine-in Experience
+              </h3>
+              <p className="text-foreground/70">
+                Enjoy a cozy and relaxing atmosphere — perfect for friends,
+                work, or study.
+              </p>
+            </div>
+
+            <div className="bg-background border border-border rounded-xl p-8 space-y-3 hover:border-primary/30 transition">
+              <h3 className="text-xl font-semibold text-foreground">
+                Pre-Order & Pick-Up
+              </h3>
+              <p className="text-foreground/70">
+                Place your order ahead of time and simply collect it when you
+                arrive — quick, easy, and hassle-free.
+              </p>
+            </div>
+
+            <div className="bg-background border border-border rounded-xl p-8 space-y-3 hover:border-primary/30 transition">
+              <h3 className="text-xl font-semibold text-foreground">
+                Catering Services
+              </h3>
+              <p className="text-foreground/70">
+                We cater events, corporate meetings, birthdays, and special
+                occasions.
+              </p>
+            </div>
+
+            <div className="bg-background border border-border rounded-xl p-8 space-y-3 hover:border-primary/30 transition">
+              <h3 className="text-xl font-semibold text-foreground">
+                Events & Private Bookings
+              </h3>
+              <p className="text-foreground/70">
+                Host gatherings, meet-ups, workshops, or celebrations at
+                Aromalaya.
+              </p>
+            </div>
+
+            <div className="bg-background border border-border rounded-xl p-8 space-y-3 hover:border-primary/30 transition">
+              <h3 className="text-xl font-semibold text-foreground">
+                Free Wi-Fi & Work-Friendly Space
+              </h3>
+              <p className="text-foreground/70">
+                A peaceful café environment designed for remote work and study.
+              </p>
+            </div>
+
+            <div className="bg-background border border-border rounded-xl p-8 space-y-3 hover:border-primary/30 transition">
+              <h3 className="text-xl font-semibold text-foreground">
+                Specialty Coffee & Custom Drinks
+              </h3>
+              <p className="text-foreground/70">
+                Personalized drinks crafted by skilled baristas — just the way
+                you like it.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Menu Section */}
+      <section
+        id="menu"
+        className="px-4 md:px-6 py-20 md:py-28 bg-secondary/30"
+        style={{ backgroundColor: "#6759472e" }}
+      >
+        <div className="max-w-6xl mx-auto space-y-12">
+          {/* Section Title */}
+          <div className="text-center space-y-4">
+            <h2 className="text-4xl md:text-5xl font-serif text-foreground">
+              Our Menu
+            </h2>
+            <div className="w-12 h-1 bg-primary mx-auto rounded-full"></div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Coffee Section */}
+            <div className="bg-background rounded-xl p-8 border border-border hover:border-primary/30 transition space-y-4">
+              <div className="flex items-center gap-3">
+                <Coffee className="w-8 h-8 text-primary" />
+                <h3 className="text-2xl font-bold text-foreground">Coffees</h3>
+              </div>
+              <p className="text-foreground/70 leading-relaxed">
+                From espresso to specialty brews, our baristas craft every cup
+                with care using premium, ethically-sourced beans.
+              </p>
+              <ul className="space-y-2 text-sm text-foreground/60">
+                <li>• Americano </li>
+                <li>• Espresso </li>
+                <li>• Iced Coffee </li>
+                <li>• Latte </li>
+                <li>• Cappuccino </li>
+                <li>• Macchiato </li>
+              </ul>
+            </div>
+
+            {/* Tea Section */}
+            <div className="bg-background rounded-xl p-8 border border-border hover:border-primary/30 transition space-y-4">
+              <div className="flex items-center gap-3">
+                <Coffee className="w-8 h-8 text-primary" />
+                <h3 className="text-2xl font-bold text-foreground">Teas</h3>
+              </div>
+              <p className="text-foreground/70 leading-relaxed">
+                Curated selection of teas from Nepal's finest tea gardens and
+                worldwide sources.
+              </p>
+              <ul className="space-y-2 text-sm text-foreground/60">
+                <li>• Black Tea </li>
+                <li>• Green Tea </li>
+                <li>• Milk Tea </li>
+                <li>• Matka Chai </li>
+                <li>• Iced Lemon Tea </li>
+              </ul>
+            </div>
+
+            {/* Milkshakes & Lassi Section */}
+            <div className="bg-background rounded-xl p-8 border border-border hover:border-primary/30 transition space-y-4">
+              <div className="flex items-center gap-3">
+                <Coffee className="w-8 h-8 text-primary" />
+                <h3 className="text-2xl font-bold text-foreground">
+                  Milkshakes & Lassi
+                </h3>
+              </div>
+              <p className="text-foreground/70 leading-relaxed">
+                Delicious milkshakes and traditional lassis made fresh to quench
+                your thirst.
+              </p>
+              <ul className="space-y-2 text-sm text-foreground/60">
+                <li>• Chocolate Milkshake </li>
+                <li>• Strawberry Milkshake </li>
+                <li>• Vanilla Milkshake </li>
+                <li>• Mango Lassi </li>
+                <li>• Sweet Lassi </li>
+              </ul>
+            </div>
+
+            {/* Fresh Juices & Coolers Section */}
+            <div className="bg-background rounded-xl p-8 border border-border hover:border-primary/30 transition space-y-4">
+              <div className="flex items-center gap-3">
+                <Coffee className="w-8 h-8 text-primary" />
+                <h3 className="text-2xl font-bold text-foreground">
+                  Fresh Juices & Coolers
+                </h3>
+              </div>
+              <p className="text-foreground/70 leading-relaxed">
+                Refreshing and natural juices made from the freshest fruits.
+              </p>
+              <ul className="space-y-2 text-sm text-foreground/60">
+                <li>• Lemonade </li>
+                <li>• Orange Pineapple Juice </li>
+                <li>• Mango Smoothie </li>
+                <li>• Strawberry Lemon Cooler </li>
+              </ul>
+            </div>
+
+            {/* Bakery & Desserts Section */}
+            <div className="bg-background rounded-xl p-8 border border-border hover:border-primary/30 transition space-y-4">
+              <div className="flex items-center gap-3">
+                <Cake className="w-8 h-8 text-accent" />
+                <h3 className="text-2xl font-bold text-foreground">
+                  Bakery & Desserts
+                </h3>
+              </div>
+              <p className="text-foreground/70 leading-relaxed">
+                Freshly baked pastries, cookies, and desserts made every
+                morning.
+              </p>
+              <ul className="space-y-2 text-sm text-foreground/60">
+                <li>• Croissant </li>
+                <li>• Muffin </li>
+                <li>• Brownie </li>
+                <li>• Donut </li>
+                <li>• Cookie </li>
+              </ul>
+            </div>
+
+            {/* Soft Drinks Section */}
+            <div className="bg-background rounded-xl p-8 border border-border hover:border-primary/30 transition space-y-4">
+              <div className="flex items-center gap-3">
+                <Coffee className="w-8 h-8 text-primary" />
+                <h3 className="text-2xl font-bold text-foreground">
+                  Soft Drinks
+                </h3>
+              </div>
+              <p className="text-foreground/70 leading-relaxed">
+                Classic soft drinks to refresh your day.
+              </p>
+              <ul className="space-y-2 text-sm text-foreground/60">
+                <li>• Coke </li>
+                <li>• Sprite </li>
+                <li>• Fanta  </li>
+                <li>• Pepsi </li>
+                <li>• Dew </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer
+        className="bg-foreground/95 text-background px-4 md:px-6 py-12"
+        style={{ backgroundColor: "#453225ff" }}
+      >
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+                <Coffee className="w-6 h-6" />
+                Aromalaya
+              </h4>
+              <p className="text-background/70 text-sm leading-relaxed">
+                Authentic Nepali flavors and cozy cafe vibes in one warm space.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-bold text-lg mb-4">Menu</h4>
+              <ul className="space-y-2 text-sm text-background/70">
+                <li>
+                  <a href="#menu" className="hover:text-background transition">
+                    Coffee
+                  </a>
+                </li>
+                <li>
+                  <a href="#menu" className="hover:text-background transition">
+                    Baked Goods
+                  </a>
+                </li>
+                <li>
+                  <a href="#menu" className="hover:text-background transition">
+                    Teas
+                  </a>
+                </li>
+                <li>
+                  <a href="#menu" className="hover:text-background transition">
+                    Fresh Juices & Coolers
+                  </a>
+                </li>
+                <li>
+                  <a href="#menu" className="hover:text-background transition">
+                    Milkshakes & Lassi
+                  </a>
+                </li>
+                <li>
+                  <a href="#menu" className="hover:text-background transition">
+                    Soft Drinks
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-lg mb-4">Follow Us</h4>
+              <ul className="space-y-2 text-sm text-background/70">
+                <li>
+                  <a href="#" className="hover:text-background transition">
+                    Instagram
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-background transition">
+                    Facebook
+                  </a>
+                </li>
+
+                <li>
+                  <a href="#" className="hover:text-background transition">
+                    TikTok
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-background/20 pt-8 text-center text-sm text-background/70">
+            <p>
+              {" "}
+              &copy; 2026 Aromalaya Cafe. All rights reserved. Made with Love in
+              Nepal.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
-  )
+  );
 }

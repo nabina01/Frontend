@@ -33,6 +33,11 @@ const NAV_ITEMS: NavItem[] = [
     icon: <LayoutDashboard className="w-5 h-5" />,
   },
   {
+    href: "/admin/users",
+    label: "Users",
+    icon: <Clock className="w-5 h-5" />,
+  },
+  {
     href: "/admin/orders",
     label: "Orders",
     icon: <ShoppingCart className="w-5 h-5" />,
@@ -52,11 +57,7 @@ const NAV_ITEMS: NavItem[] = [
     label: "Reports",
     icon: <BarChart3 className="w-5 h-5" />,
   },
-  {
-    href: "/admin/users",
-    label: "Users",
-    icon: <Clock className="w-5 h-5" />,
-  },
+  
 ]
 
 export default function AdminSidebar() {

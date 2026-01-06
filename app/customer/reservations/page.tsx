@@ -41,9 +41,11 @@ export default function ReservationsPage() {
   }, [isAuthenticated, userId])
 
   const fetchReservations = async () => {
+    console.log("Fetching reservations for userId:", userId)
+    console.log("Using token:", token)
     setLoading(true)
     try {
-      const res = await fetch(`${API_BASE_URL}/api/reservations/userid/${userId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/reservations/user/${userId}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

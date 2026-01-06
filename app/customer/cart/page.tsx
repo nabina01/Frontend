@@ -6,16 +6,40 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/ca
 import { ArrowLeft, Trash2, Plus, Minus } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
+import { useKhaltiPayment } from "@/src/hooks/useKhaltiPayment"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:2004";
 
 export default function CartPage() {
   const { items, total, removeItem, updateQuantity, clearCart } = useCart()
-  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "ESEWA">("CASH")
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "ESEWA" | "KHALTI">("CASH")
+  const { initiateKhaltiPayment, isProcessing } = useKhaltiPayment()
 
   const handleCheckout = async () => {
     if (items.length === 0) return
 
+    // Handle Khalti payment
+    if (paymentMethod === "KHALTI") {
+      await initiateKhaltiPayment(
+        total,
+        undefined, // reservationId
+        "Cafe Order",
+        () => {
+          // On success
+          clearCart()
+          alert("Payment successful! Order placed.")
+          window.location.href = "/customer/orders"
+        },
+        (error) => {
+          // On error
+          console.error("Payment failed:", error)
+          alert("Payment failed. Please try again.")
+        }
+      )
+      return
+    }
+
+    // Handle Cash and eSewa payments
     try {
       const response = await fetch("/api/orders", {
         method: "POST",
@@ -145,7 +169,7 @@ export default function CartPage() {
                         name="payment"
                         value="CASH"
                         checked={paymentMethod === "CASH"}
-                        onChange={(e) => setPaymentMethod(e.target.value as "CASH" | "ESEWA")}
+                        onChange={(e) => setPaymentMethod(e.target.value as "CASH" | "ESEWA" | "KHALTI")}
                         className="mr-3"
                       />
                       <span className="text-sm text-foreground">Cash on Delivery</span>
@@ -159,10 +183,24 @@ export default function CartPage() {
                         name="payment"
                         value="ESEWA"
                         checked={paymentMethod === "ESEWA"}
-                        onChange={(e) => setPaymentMethod(e.target.value as "CASH" | "ESEWA")}
+                        onChange={(e) => setPaymentMethod(e.target.value as "CASH" | "ESEWA" | "KHALTI")}
                         className="mr-3"
                       />
                       <span className="text-sm text-foreground">eSewa Payment</span>
+                    </label>
+                    <label
+                      className="flex items-center p-3 border border-border rounded-lg cursor-pointer hover:bg-secondary transition-colors"
+                      style={{ borderColor: paymentMethod === "KHALTI" ? "var(--primary)" : undefined }}
+                    >
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="KHALTI"
+                        checked={paymentMethod === "KHALTI"}
+                        onChange={(e) => setPaymentMethod(e.target.value as "CASH" | "ESEWA" | "KHALTI")}
+                        className="mr-3"
+                      />
+                      <span className="text-sm text-foreground">Khalti Payment</span>
                     </label>
                   </div>
                 </div>
@@ -170,9 +208,10 @@ export default function CartPage() {
                 {/* Checkout Button */}
                 <Button
                   onClick={handleCheckout}
+                  disabled={isProcessing}
                   className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-10"
                 >
-                  Proceed to Checkout
+                  {isProcessing ? "Processing..." : "Proceed to Checkout"}
                 </Button>
               </CardContent>
             </Card>
