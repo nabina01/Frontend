@@ -74,7 +74,7 @@ export default function Home() {
         className="px-4 md:px-6 py-20 md:py-28"
         style={{ backgroundColor: "#614f43ff" }}
       >
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto space-y-16">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left: Text */}
             <div className="space-y-6">
@@ -115,6 +115,98 @@ export default function Home() {
               />
             </div>
           </div>
+
+          {/* Mission, Vision & Values */}
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Mission */}
+            <div 
+              className="rounded-2xl p-8 border border-primary/30 shadow-lg hover:shadow-xl transition-all"
+              style={{ backgroundColor: "#8b6c5c" }}
+            >
+              <div className="flex items-start gap-4">
+                <div className="bg-primary/20 p-3 rounded-full">
+                  <Coffee className="w-8 h-8 text-primary" />
+                </div>
+                <div className="space-y-3">
+                  <h3 className="text-2xl font-bold text-foreground">Our Mission</h3>
+                  <p className="text-lg text-foreground/90 leading-relaxed">
+                    Bring joy and flavor to every cup and every bite.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Vision */}
+            <div 
+              className="rounded-2xl p-8 border border-primary/30 shadow-lg hover:shadow-xl transition-all"
+              style={{ backgroundColor: "#8b6c5c" }}
+            >
+              <div className="flex items-start gap-4">
+                <div className="bg-primary/20 p-3 rounded-full">
+                  <Cake className="w-8 h-8 text-primary" />
+                </div>
+                <div className="space-y-3">
+                  <h3 className="text-2xl font-bold text-foreground">Our Vision</h3>
+                  <p className="text-lg text-foreground/90 leading-relaxed">
+                    Be the most loved cafe, where every visit feels special.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Values - Full Width */}
+          <div 
+            className="rounded-2xl p-10 border border-primary/30 shadow-lg"
+            style={{ backgroundColor: "#8b6c5c" }}
+          >
+            <h3 className="text-3xl font-bold text-foreground mb-8 text-center">Our Values</h3>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {/* Quality */}
+              <div className="text-center space-y-3">
+                <div className="bg-primary/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
+                  <Coffee className="w-8 h-8 text-primary" />
+                </div>
+                <h4 className="text-xl font-bold text-foreground">Quality</h4>
+                <p className="text-foreground/80 text-sm leading-relaxed">
+                  Fresh, delicious, and crafted with care.
+                </p>
+              </div>
+
+              {/* Happiness */}
+              <div className="text-center space-y-3">
+                <div className="bg-primary/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
+                  <span className="text-3xl">😊</span>
+                </div>
+                <h4 className="text-xl font-bold text-foreground">Happiness</h4>
+                <p className="text-foreground/80 text-sm leading-relaxed">
+                  Guests first, always.
+                </p>
+              </div>
+
+              {/* Warmth */}
+              <div className="text-center space-y-3">
+                <div className="bg-primary/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
+                  <span className="text-3xl">🤝</span>
+                </div>
+                <h4 className="text-xl font-bold text-foreground">Warmth</h4>
+                <p className="text-foreground/80 text-sm leading-relaxed">
+                  A cozy place to relax and connect.
+                </p>
+              </div>
+
+              {/* Sustainability */}
+              <div className="text-center space-y-3">
+                <div className="bg-primary/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
+                  <span className="text-3xl">🌱</span>
+                </div>
+                <h4 className="text-xl font-bold text-foreground">Sustainability</h4>
+                <p className="text-foreground/80 text-sm leading-relaxed">
+                  Caring for people and the planet.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -125,13 +217,13 @@ export default function Home() {
       >
         <div className="max-w-6xl mx-auto text-center space-y-12">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground">
-            Start getting results with Eat App
+            About Aromalaya Cafe Management System
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
             {/* 10M Reservations */}
             <div className="bg-background border border-border rounded-xl p-8 shadow hover:shadow-lg transition space-y-3">
-              <div className="text-3xl font-bold text-foreground">10M</div>
+              <div className="text-3xl font-bold text-foreground">10000+</div>
               <div className="text-lg font-semibold text-foreground/90">
                 Reservations
               </div>
@@ -160,10 +252,10 @@ export default function Home() {
             <div className="bg-background border border-border rounded-xl p-8 shadow hover:shadow-lg transition space-y-3">
               <div className="text-3xl font-bold text-foreground">300%</div>
               <div className="text-lg font-semibold text-foreground/90">
-                Increased
+                Customer Satisfaction
               </div>
               <div className="text-sm text-foreground/70">
-                feedback responses
+                Increase in Guest Happiness
               </div>
             </div>
           </div>
