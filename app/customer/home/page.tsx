@@ -105,7 +105,7 @@ export default function UserHomePage() {
         console.log("Reservations data:", data)
         
         // Handle both array and object responses
-        const reservationsList = Array.isArray(data) ? data : (data.reservations || [])
+        const reservationsList = Array.isArray(data) ? data : (data.data || data.reservations || [])
         
         // Filter to show only upcoming/confirmed reservations for the logged-in user
         const userReservations = reservationsList.filter((r: Reservation) => 
@@ -114,9 +114,11 @@ export default function UserHomePage() {
         setReservations(userReservations)
       } else {
         console.error("Failed to fetch reservations:", response.status, response.statusText)
+        setReservations([])
       }
     } catch (err) {
-      console.error("Error fetching reservations:", err)
+      console.error("Error fetching reservations:", err instanceof Error ? err.message : String(err))
+      setReservations([])
     }
   }
 
@@ -144,16 +146,18 @@ export default function UserHomePage() {
         console.log("Orders data:", data)
         
         // Handle both array and object responses
-        const ordersList = Array.isArray(data) ? data : (data.orders || [])
+        const ordersList = Array.isArray(data) ? data : (data.data || data.orders || [])
         
         // Get recent orders (last 5)
         const recentOrders = ordersList.slice(0, 5)
         setOrders(recentOrders)
       } else {
         console.error("Failed to fetch orders:", response.status, response.statusText)
+        setOrders([])
       }
     } catch (err) {
-      console.error("Error fetching orders:", err)
+      console.error("Error fetching orders:", err instanceof Error ? err.message : String(err))
+      setOrders([])
     }
   }
 
@@ -182,54 +186,54 @@ export default function UserHomePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
-        <Loader2 className="w-12 h-12 animate-spin text-amber-600" />
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-stone-100 to-amber-100">
+        <Loader2 className="w-12 h-12 animate-spin text-amber-800" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex relative overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-stone-100 via-amber-50 to-stone-50 flex relative overflow-x-hidden">
       {/* Left Side - Main Content */}
       <div className="flex-1 p-8 lg:p-12 mr-16 overflow-y-auto">
         {/* Welcome Message */}
         <div className="mb-8">
-          <h1 className="text-5xl font-bold text-amber-900 mb-2 flex items-center gap-3">
-            <Coffee className="w-12 h-12 text-amber-700" />
-            Welcome Back, {user?.name || 'Guest'}!
+          <h1 className="text-5xl font-bold text-amber-950 mb-2 flex items-center gap-3">
+            <Coffee className="w-12 h-12 text-amber-800" />
+            Welcome Back, Customer!
           </h1>
-          <p className="text-xl text-amber-800/80">Your daily dose of happiness awaits ☕</p>
+          <p className="text-xl text-stone-700">Your daily dose of happiness awaits ☕</p>
         </div>
 
       {/* Menu Highlights */}
         <Card className="p-6 mb-8 bg-white/90 backdrop-blur shadow-xl">
-          <h2 className="text-3xl font-bold text-amber-900 mb-6 flex items-center gap-2">
-            <UtensilsCrossed className="w-8 h-8 text-amber-700" />
+          <h2 className="text-3xl font-bold text-amber-950 mb-6 flex items-center gap-2">
+            <UtensilsCrossed className="w-8 h-8 text-amber-800" />
             Today's Menu Highlights
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="group hover:scale-105 transition-transform">
-              <div className="bg-gradient-to-br from-amber-100 to-orange-100 p-4 rounded-lg">
+              <div className="bg-gradient-to-br from-amber-100 to-stone-200 p-4 rounded-lg">
                 <div className="text-4xl mb-2">☕</div>
-                <h4 className="text-lg font-bold text-amber-900 mb-1">Espresso</h4>
-                <p className="text-sm text-amber-800 mb-2">Rich and bold</p>
-                <p className="text-xl font-bold text-amber-700">Rs 100</p>
+                <h4 className="text-lg font-bold text-amber-950 mb-1">Espresso</h4>
+                <p className="text-sm text-stone-700 mb-2">Rich and bold</p>
+                <p className="text-xl font-bold text-amber-800">Rs 100</p>
               </div>
             </div>
             <div className="group hover:scale-105 transition-transform">
-              <div className="bg-gradient-to-br from-orange-100 to-yellow-100 p-4 rounded-lg">
+              <div className="bg-gradient-to-br from-stone-200 to-amber-100 p-4 rounded-lg">
                 <div className="text-4xl mb-2">🥐</div>
-                <h4 className="text-lg font-bold text-amber-900 mb-1">Croissant</h4>
-                <p className="text-sm text-amber-800 mb-2">Fresh baked</p>
-                <p className="text-xl font-bold text-amber-700">Rs 120</p>
+                <h4 className="text-lg font-bold text-amber-950 mb-1">Croissant</h4>
+                <p className="text-sm text-stone-700 mb-2">Fresh baked</p>
+                <p className="text-xl font-bold text-amber-800">Rs 120</p>
               </div>
             </div>
             <div className="group hover:scale-105 transition-transform">
-              <div className="bg-gradient-to-br from-yellow-100 to-amber-100 p-4 rounded-lg">
+              <div className="bg-gradient-to-br from-amber-100 to-yellow-100 p-4 rounded-lg">
                 <div className="text-4xl mb-2">🥤</div>
-                <h4 className="text-lg font-bold text-amber-900 mb-1">Chocolate MilkShake</h4>
-                <p className="text-sm text-amber-800 mb-2">Chocolate delight</p>
-                <p className="text-xl font-bold text-amber-700">Rs 200</p>
+                <h4 className="text-lg font-bold text-amber-950 mb-1">Chocolate MilkShake</h4>
+                <p className="text-sm text-stone-700 mb-2">Chocolate delight</p>
+                <p className="text-xl font-bold text-amber-800">Rs 200</p>
               </div>
             </div>
           </div>
@@ -238,7 +242,7 @@ export default function UserHomePage() {
 
         {/* Offers & Loyalty Points */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <Card className="p-6 bg-gradient-to-br from-amber-600 to-orange-600 text-white shadow-xl">
+          <Card className="p-6 bg-gradient-to-br from-amber-700 to-amber-800 text-white shadow-xl">
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-2xl font-bold mb-2">Your Rewards</h3>
@@ -249,7 +253,7 @@ export default function UserHomePage() {
             </div>
           </Card>
 
-          <Card className="p-6 bg-gradient-to-br from-orange-700 to-amber-800 text-white shadow-xl">
+          <Card className="p-6 bg-gradient-to-br from-amber-800 to-yellow-900 text-white shadow-xl">
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-2xl font-bold mb-2">Special Offer</h3>
@@ -263,7 +267,7 @@ export default function UserHomePage() {
 
         {/* Cafe Info and Notifications */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <Card className="p-6 bg-gradient-to-br from-amber-700 to-orange-700 text-white shadow-xl">
+          <Card className="p-6 bg-gradient-to-br from-yellow-800 to-amber-800 text-white shadow-xl">
             <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
               <Bell className="w-6 h-6" />
               Notifications
@@ -280,7 +284,7 @@ export default function UserHomePage() {
             </div>
           </Card>
 
-          <Card className="p-6 bg-gradient-to-br from-orange-800 to-amber-900 text-white shadow-xl">
+          <Card className="p-6 bg-gradient-to-br from-amber-800 to-amber-900 text-white shadow-xl">
             <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
               <MapPin className="w-6 h-6" />
               Cafe Information
@@ -297,14 +301,14 @@ export default function UserHomePage() {
                 <Phone className="w-5 h-5" />
                 <div>
                   <p className="text-sm font-semibold">Contact</p>
-                  <p className="text-xs opacity-90">(555) 123-4567</p>
+                  <p className="text-xs opacity-90">(+977)9813487800 </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="w-5 h-5" />
                 <div>
                   <p className="text-sm font-semibold">Location</p>
-                  <p className="text-xs opacity-90">123 Coffee Street</p>
+                  <p className="text-xs opacity-90">Banepa, Kavrepalanchok, Nepal</p>
                 </div>
               </div>
             </div>
@@ -314,7 +318,7 @@ export default function UserHomePage() {
 
       {/* Right Sidebar - User Profile (Collapsible) */}
       <div 
-        className={`fixed right-0 top-0 h-full bg-gradient-to-b from-amber-900 to-orange-900 shadow-2xl transition-all duration-300 ease-in-out z-50 ${
+        className={`fixed right-0 top-0 h-full bg-gradient-to-b from-amber-900 to-stone-900 shadow-2xl transition-all duration-300 ease-in-out z-50 ${
           sidebarOpen ? 'w-80' : 'w-16'
         }`}
         onMouseEnter={() => setSidebarOpen(true)}
@@ -331,7 +335,7 @@ export default function UserHomePage() {
 
         <div className={`p-6 flex flex-col h-full transition-opacity duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <div className="text-center mb-6 mt-8">
-            <div className="w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full mx-auto flex items-center justify-center shadow-lg mb-4 border-4 border-white/20">
+            <div className="w-24 h-24 bg-gradient-to-br from-amber-600 to-amber-700 rounded-full mx-auto flex items-center justify-center shadow-lg mb-4 border-4 border-white/20">
               <UserIcon className="w-12 h-12 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-white">My Profile</h2>
@@ -393,7 +397,7 @@ export default function UserHomePage() {
         {/* Collapsed State - Icon Only */}
         {!sidebarOpen && (
           <div className="flex flex-col items-center justify-center h-full">
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 bg-gradient-to-br from-amber-600 to-amber-700 rounded-full flex items-center justify-center shadow-lg">
               <UserIcon className="w-6 h-6 text-white" />
             </div>
           </div>

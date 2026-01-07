@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [isSignup, setIsSignup] = useState(false)
   const [name, setName] = useState("")
+  const [phoneNumber, setPhoneNumber] = useState("")
   const { login, signup, error, clearError, isLoading, user } = useAuth()
   const router = useRouter()
 
@@ -26,7 +27,7 @@ export default function LoginPage() {
 
     try {
       if (isSignup) {
-        await signup(name, email, password, "USER")
+        await signup(name, email, password, phoneNumber, "USER")
         // Don't redirect here - let app/page.tsx handle redirect based on auth state
       } else {
         await login(email, password)
@@ -72,7 +73,7 @@ export default function LoginPage() {
                   <Label htmlFor="name">Full Name</Label>
                   <Input
                     id="name"
-                    placeholder="John Doe"
+                    placeholder="Nabina Dahal"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required={isSignup}
@@ -85,7 +86,7 @@ export default function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="example@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -103,6 +104,20 @@ export default function LoginPage() {
                   required
                 />
               </div>
+
+              {isSignup && (
+                <div className="space-y-2">
+                  <Label htmlFor="phoneNumber">Phone Number</Label>
+                  <Input
+                    id="phoneNumber"
+                    type="tel"
+                    placeholder="**********"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    required={isSignup}
+                  />
+                </div>
+              )}
 
               <Button
                 type="submit"

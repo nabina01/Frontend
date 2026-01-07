@@ -31,6 +31,7 @@ interface AllReports {
 export default function ReportsPage() {
   const [reports, setReports] = useState<AllReports | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchReports()
@@ -38,13 +39,57 @@ export default function ReportsPage() {
 
   const fetchReports = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/reports/allreport`)
+      const token = localStorage.getItem("accessToken")
+      
+      if (!token) {
+        console.error("No access token found")
+        setError("Please login first")
+        setLoading(false)
+        return
+      }
+      
+      console.log("Fetching reports with token:", token.substring(0, 20) + "...")
+      
+      const response = await fetch(`${API_BASE_URL}/api/reports/allreport`, {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+      })
+      
+      console.log("Reports response status:", response.status)
+      console.log("Reports response ok:", response.ok)
+      
+      if (response.status === 401) {
+        localStorage.removeItem("accessToken")
+        setError("Session expired. Please login again.")
+        setTimeout(() => {
+          window.location.href = "/login"
+        }, 2000)
+        return
+      }
+      
       if (response.ok) {
         const data = await response.json()
+        console.log("Reports data:", data)
+        console.log("Reports data.data:", data.data)
         setReports(data.data)
+      } else {
+        let errorMessage = `Request failed with status ${response.status}`
+        try {
+          const errorData = await response.json()
+          console.error("API Error:", errorData)
+          errorMessage = errorData.message || errorMessage
+        } catch (e) {
+          const text = await response.text()
+          console.error("Response text:", text)
+          errorMessage = text || errorMessage
+        }
+        setError(errorMessage)
       }
     } catch (error) {
-      console.error("Failed to fetch report:", error)
+      console.error("Failed to fetch reports:", error)
+      setError("Network error. Backend server may not be running on port 2004.")
     } finally {
       setLoading(false)
     }
@@ -61,6 +106,18 @@ export default function ReportsPage() {
   return (
     <div className="p-6 lg:p-8">
       <h1 className="text-3xl font-bold mb-4">Reports</h1>
+
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
+        </div>
+      )}
+
+      {!reports && !error && (
+        <div className="p-8 text-center text-muted-foreground">
+          No report data available. Check console for errors.
+        </div>
+      )}
 
       {reports && (
         <>

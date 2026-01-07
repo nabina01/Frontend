@@ -17,7 +17,7 @@ interface AuthContextType {
   isAuthenticated: boolean
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
-  signup: (name: string, email: string, password: string, role: "USER") => Promise<void>
+  signup: (name: string, email: string, password: string, phoneNumber: string, role: "USER") => Promise<void>
   logout: () => Promise<void>
   error: string | null
   clearError: () => void
@@ -73,6 +73,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("user", JSON.stringify(data.user))
       
       setUser(data.user)
+      
+      // Trigger cart reload by dispatching storage event
+      window.dispatchEvent(new Event('storage'))
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Login failed"
       setError(errorMessage)
@@ -82,14 +85,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const signup = useCallback(async (name: string, email: string, password: string, role: "USER") => {
+  const signup = useCallback(async (name: string, email: string, password: string, phoneNumber: string, role: "USER") => {
     setIsLoading(true)
     setError(null)
     try {
       const response = await fetch(`${API_BASE_URL}/api/users/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, phoneNumber }),
       })
 
       const data = await response.json()
@@ -118,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     setIsLoading(true)
     try {
-      // Clear local storage
+      // Clear auth data (but keep cart)
       localStorage.removeItem("accessToken")
       localStorage.removeItem("user")
       setUser(null)

@@ -23,19 +23,43 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
-  // Load cart from localStorage
+  // Load cart from localStorage when user changes
   useEffect(() => {
-    const saved = localStorage.getItem("cafe-cart")
-    if (saved) {
-      setItems(JSON.parse(saved))
+    const loadCart = () => {
+      const userData = localStorage.getItem("user")
+      const userId = userData ? JSON.parse(userData).id : null
+      setCurrentUserId(userId)
+
+      if (userId) {
+        const saved = localStorage.getItem(`cafe-cart-${userId}`)
+        if (saved) {
+          setItems(JSON.parse(saved))
+        } else {
+          setItems([])
+        }
+      } else {
+        setItems([])
+      }
+    }
+
+    loadCart()
+
+    // Listen for storage changes (login/logout from other tabs or after login)
+    window.addEventListener('storage', loadCart)
+    
+    return () => {
+      window.removeEventListener('storage', loadCart)
     }
   }, [])
 
-  // Save cart to localStorage
+  // Save cart to localStorage whenever items or user changes
   useEffect(() => {
-    localStorage.setItem("cafe-cart", JSON.stringify(items))
-  }, [items])
+    if (currentUserId) {
+      localStorage.setItem(`cafe-cart-${currentUserId}`, JSON.stringify(items))
+    }
+  }, [items, currentUserId])
 
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
@@ -64,7 +88,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [removeItem],
   )
 
-  const clearCart = useCallback(() => setItems([]), [])
+  const clearCart = useCallback(() => {
+    setItems([])
+    if (currentUserId) {
+      localStorage.removeItem(`cafe-cart-${currentUserId}`)
+    }
+  }, [currentUserId])
 
   return (
     <CartContext.Provider value={{ items, total, addItem, removeItem, updateQuantity, clearCart }}>

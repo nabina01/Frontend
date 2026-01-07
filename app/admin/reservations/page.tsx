@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, Fragment } from "react";
-import { Loader2, MoreHorizontal, Check, X } from "lucide-react";
-import { Menu, Transition } from "@headlessui/react";
+import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:2004";
@@ -19,6 +18,7 @@ interface Reservation {
 export default function ReservationsPage() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState<string | null>(null);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,9 +44,13 @@ export default function ReservationsPage() {
   // Update status and immediately update UI
   const updateStatus = async (id: number, status: "CONFIRMED" | "CANCELLED") => {
     try {
+      const token = localStorage.getItem("accessToken");
       const response = await fetch(`${API_BASE_URL}/api/reservations/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
         body: JSON.stringify({ status }),
       });
 
@@ -55,9 +59,17 @@ export default function ReservationsPage() {
         setReservations((prev) =>
           prev.map((r) => (r.id === id ? { ...r, status } : r))
         );
+        setMessage(`Reservation ${status.toLowerCase()} successfully`);
+        setTimeout(() => setMessage(null), 3000);
+      } else {
+        const error = await response.json();
+        setMessage(error.message || "Failed to update reservation");
+        setTimeout(() => setMessage(null), 3000);
       }
     } catch (error) {
       console.error("Failed to update reservation:", error);
+      setMessage("Failed to update reservation. Please try again.");
+      setTimeout(() => setMessage(null), 3000);
     }
   };
 
@@ -89,8 +101,17 @@ export default function ReservationsPage() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Table Reservations</h1>
+    <div className="p-6 lg:p-8">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">Table Reservations</h1>
+        <p className="text-muted-foreground mt-2">Manage customer reservations</p>
+      </div>
+
+      {message && (
+        <div className="mb-4 p-3 rounded bg-green-100 text-green-700 border border-green-300">
+          {message}
+        </div>
+      )}
 
       <div
         className="overflow-x-auto border rounded-lg"
@@ -136,54 +157,25 @@ export default function ReservationsPage() {
                   </span>
                 </td>
                 <td className="px-4 py-2">
-                  {r.status === "PENDING" && (
-                    <Menu as="div" className="relative inline-block text-left">
-                      <Menu.Button className="p-2 rounded hover:bg-gray-100">
-                        <MoreHorizontal className="w-5 h-5" />
-                      </Menu.Button>
-
-                      <Transition
-                        as={Fragment}
-                        enter="transition ease-out duration-100"
-                        enterFrom="transform opacity-0 scale-95"
-                        enterTo="transform opacity-100 scale-100"
-                        leave="transition ease-in duration-75"
-                        leaveFrom="transform opacity-100 scale-100"
-                        leaveTo="transform opacity-0 scale-95"
+                  {r.status === "PENDING" ? (
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => updateStatus(r.id, "CONFIRMED")}
                       >
-                        <Menu.Items className="absolute right-0 mt-2 w-32 origin-top-right bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg focus:outline-none z-10">
-                          <div className="p-1 flex flex-col">
-                            <Menu.Item>
-                              {({ active }) => (
-                                <button
-                                  className={`${
-                                    active ? "bg-gray-100" : ""
-                                  } group flex items-center px-2 py-2 text-sm text-green-700 rounded-md`}
-                                  onClick={async () => await updateStatus(r.id, "CONFIRMED")}
-                                >
-                                  <Check className="w-4 h-4 mr-2" />
-                                  Approve
-                                </button>
-                              )}
-                            </Menu.Item>
-
-                            <Menu.Item>
-                              {({ active }) => (
-                                <button
-                                  className={`${
-                                    active ? "bg-gray-100" : ""
-                                  } group flex items-center px-2 py-2 text-sm text-red-700 rounded-md`}
-                                  onClick={async () => await updateStatus(r.id, "CANCELLED")}
-                                >
-                                  <X className="w-4 h-4 mr-2" />
-                                  Reject
-                                </button>
-                              )}
-                            </Menu.Item>
-                          </div>
-                        </Menu.Items>
-                      </Transition>
-                    </Menu>
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => updateStatus(r.id, "CANCELLED")}
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">-</span>
                   )}
                 </td>
               </tr>
@@ -197,33 +189,34 @@ export default function ReservationsPage() {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-4 gap-2">
-          <button
-            className="px-3 py-1 border rounded"
+      {reservations.length > 0 && (
+        <div className="mt-4 flex gap-2 justify-center">
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handlePrevPage}
             disabled={currentPage === 1}
           >
             Previous
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button
-              key={i}
-              className={`px-3 py-1 border rounded ${
-                currentPage === i + 1 ? "bg-blue-600 text-white" : ""
-              }`}
-              onClick={() => setCurrentPage(i + 1)}
+          </Button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <Button
+              key={page}
+              variant={currentPage === page ? "default" : "outline"}
+              size="sm"
+              onClick={() => setCurrentPage(page)}
             >
-              {i + 1}
-            </button>
+              {page}
+            </Button>
           ))}
-          <button
-            className="px-3 py-1 border rounded"
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleNextPage}
             disabled={currentPage === totalPages}
           >
             Next
-          </button>
+          </Button>
         </div>
       )}
     </div>

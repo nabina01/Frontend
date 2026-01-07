@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, MoreVertical, Eye, Pencil, Trash } from "lucide-react";
-import { TableBody } from "@/src/components/ui/table";
+import { Loader2 } from "lucide-react";
+import { Button } from "@/src/components/ui/button";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:2004";
 
@@ -174,8 +174,11 @@ useEffect(() => {
   );
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Orders</h1>
+    <div className="p-6 lg:p-8">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">Orders</h1>
+        <p className="text-muted-foreground mt-2">Manage customer orders</p>
+      </div>
 
       {message && (
         <div className="mb-4 p-3 rounded bg-green-100 text-green-700 border border-green-300">
@@ -235,30 +238,30 @@ useEffect(() => {
                 </td>
                 <td className="px-4 py-2">{order.orderPaymentType}</td>
 
-                <td className="px-4 py-2 flex gap-2 items-center">
-                  <button
-                    className="p-2 bg-blue-100 rounded hover:bg-blue-200"
-                    onClick={() => handleView(order)}
-                    title="View"
-                  >
-                    <Eye className="w-5 h-5 text-blue-600" />
-                  </button>
-
-                  <button
-                    className="p-2 bg-green-100 rounded hover:bg-green-200"
-                    onClick={() => handleEdit(order)}
-                    title="Edit"
-                  >
-                    <Pencil className="w-5 h-5 text-green-600" />
-                  </button>
-
-                  <button
-                    className="p-2 bg-red-100 rounded hover:bg-red-200"
-                    onClick={() => handleDelete(order)}
-                    title="Delete"
-                  >
-                    <Trash className="w-5 h-5 text-red-600" />
-                  </button>
+                <td className="px-4 py-2">
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleView(order)}
+                    >
+                      View
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEdit(order)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDelete(order)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -271,33 +274,36 @@ useEffect(() => {
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-center mt-4 gap-2">
-        <button
-          className="px-3 py-1 border rounded"
-          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </button>
-        {Array.from({ length: totalPages }, (_, i) => (
-          <button
-            key={i}
-            className={`px-3 py-1 border rounded ${
-              currentPage === i + 1 ? "bg-blue-600 text-white" : ""
-            }`}
-            onClick={() => setCurrentPage(i + 1)}
+      {orders.length > 0 && (
+        <div className="mt-4 flex gap-2 justify-center">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
           >
-            {i + 1}
-          </button>
-        ))}
-        <button
-          className="px-3 py-1 border rounded"
-          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </button>
-      </div>
+            Previous
+          </Button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <Button
+              key={page}
+              variant={currentPage === page ? "default" : "outline"}
+              size="sm"
+              onClick={() => setCurrentPage(page)}
+            >
+              {page}
+            </Button>
+          ))}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      )}
 
       {/* VIEW MODAL */}
       {showView && selectedOrder && (

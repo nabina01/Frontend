@@ -28,7 +28,7 @@ export default function CartPage() {
           // On success
           clearCart()
           alert("Payment successful! Order placed.")
-          window.location.href = "/customer/orders"
+          window.location.href = "/customer/home"
         },
         (error) => {
           // On error
@@ -41,10 +41,19 @@ export default function CartPage() {
 
     // Handle Cash and eSewa payments
     try {
-      const response = await fetch("/api/orders", {
+      const token = localStorage.getItem("accessToken")
+      const userData = localStorage.getItem("user")
+      const user = userData ? JSON.parse(userData) : null
+      const customerName = user?.name || "Customer"
+      
+      const response = await fetch(`${API_BASE_URL}/api/orders`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({
+          customerName: customerName,
           items: items.map((item) => ({
             itemId: item.id,
             quantity: item.quantity,
@@ -58,14 +67,11 @@ export default function CartPage() {
       if (response.ok) {
         clearCart()
         alert("Order placed successfully!")
-        // Redirect based on payment method
-        if (paymentMethod === "ESEWA") {
-          // Redirect to eSewa payment
-          window.location.href = "/customer/payment/esewa"
-        } else {
-          // Stay in app for cash payment
-          window.location.href = "/customer/orders"
-        }
+        // Redirect to homepage
+        window.location.href = "/customer/home"
+      } else {
+        const errorData = await response.json()
+        alert(errorData.message || "Failed to place order")
       }
     } catch (error) {
       console.error("Checkout failed:", error)
@@ -105,7 +111,7 @@ export default function CartPage() {
                       <h3 className="font-semibold text-foreground">{item.name}</h3>
                       <p className="text-primary font-bold">Rs. {item.price}</p>
                     </div>
-
+                  
                     {/* Quantity Controls */}
                     <div className="flex items-center gap-3 mx-4">
                       <Button variant="outline" size="sm" onClick={() => updateQuantity(item.id, item.quantity - 1)}>
@@ -172,22 +178,9 @@ export default function CartPage() {
                         onChange={(e) => setPaymentMethod(e.target.value as "CASH" | "ESEWA" | "KHALTI")}
                         className="mr-3"
                       />
-                      <span className="text-sm text-foreground">Cash on Delivery</span>
+                      <span className="text-sm text-foreground">Cash</span>
                     </label>
-                    <label
-                      className="flex items-center p-3 border border-border rounded-lg cursor-pointer hover:bg-secondary transition-colors"
-                      style={{ borderColor: paymentMethod === "ESEWA" ? "var(--primary)" : undefined }}
-                    >
-                      <input
-                        type="radio"
-                        name="payment"
-                        value="ESEWA"
-                        checked={paymentMethod === "ESEWA"}
-                        onChange={(e) => setPaymentMethod(e.target.value as "CASH" | "ESEWA" | "KHALTI")}
-                        className="mr-3"
-                      />
-                      <span className="text-sm text-foreground">eSewa Payment</span>
-                    </label>
+                   
                     <label
                       className="flex items-center p-3 border border-border rounded-lg cursor-pointer hover:bg-secondary transition-colors"
                       style={{ borderColor: paymentMethod === "KHALTI" ? "var(--primary)" : undefined }}
@@ -197,7 +190,7 @@ export default function CartPage() {
                         name="payment"
                         value="KHALTI"
                         checked={paymentMethod === "KHALTI"}
-                        onChange={(e) => setPaymentMethod(e.target.value as "CASH" | "ESEWA" | "KHALTI")}
+                        onChange={(e) => setPaymentMethod(e.target.value as "CASH" | "KHALTI")}
                         className="mr-3"
                       />
                       <span className="text-sm text-foreground">Khalti Payment</span>

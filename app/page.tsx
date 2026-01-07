@@ -96,7 +96,7 @@ export default function Home() {
 
               <div
                 className="rounded-xl p-8 border border-primary/20"
-                style={{ backgroundColor: "#eae3ddff" }}
+                style={{ backgroundColor: "#8b6c5c" }}
               >
                 <p className="text-lg text-foreground/90 leading-relaxed">
                   "We believe that great coffee and fresh pastries are made with
@@ -195,7 +195,7 @@ export default function Home() {
       <section
         id="services"
         className="px-4 md:px-6 py-20 md:py-28"
-        style={{ backgroundColor: "#836548ff" }}
+        style={{ backgroundColor: "#6a4a3a" }}
       >
         <div className="max-w-6xl mx-auto space-y-12">
           <div className="text-center space-y-4">
