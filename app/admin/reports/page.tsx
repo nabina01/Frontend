@@ -141,12 +141,13 @@ export default function ReportsPage() {
           <Card className="mb-8">
             <CardHeader><CardTitle>Payment Methods</CardTitle></CardHeader>
             <CardContent>
-              {Object.entries(reports.sales.paymentMethods).map(([method, count], idx) => (
-                <div key={idx} className="flex justify-between border-b border-border py-2">
-                  <span>{method}</span>
-                  <span className="font-bold">{count}</span>
-                </div>
-              ))}
+              {Object.entries(reports.sales.paymentMethods)
+                .map(([method, count], idx) => (
+                  <div key={idx} className="flex justify-between border-b border-border py-2">
+                    <span>{method}</span>
+                    <span className="font-bold">{count}</span>
+                  </div>
+                ))}
             </CardContent>
           </Card>
 

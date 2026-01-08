@@ -6,40 +6,84 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/ca
 import { ArrowLeft, Trash2, Plus, Minus } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
-import { useKhaltiPayment } from "@/src/hooks/useKhaltiPayment"
+import { useKhaltiPayment } from "@/src/hooks/useEsewaPayment"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/src/components/ui/alert-dialog"
+import { useToast } from "@/src/hooks/use-toast"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:2004";
 
 export default function CartPage() {
   const { items, total, removeItem, updateQuantity, clearCart } = useCart()
-  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "ESEWA" | "KHALTI">("CASH")
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "KHALTI">("CASH")
   const { initiateKhaltiPayment, isProcessing } = useKhaltiPayment()
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const { toast } = useToast()
+
+  const handleCheckoutClick = () => {
+    if (items.length === 0) return
+    setShowConfirmDialog(true)
+  }
 
   const handleCheckout = async () => {
+    setShowConfirmDialog(false)
     if (items.length === 0) return
 
     // Handle Khalti payment
     if (paymentMethod === "KHALTI") {
+      // Store cart data in localStorage before redirecting to payment
+      const userData = localStorage.getItem("user")
+      const user = userData ? JSON.parse(userData) : null
+      const userId = user?.id
+      
+      if (userId) {
+        const cartData = {
+          items: items.map((item) => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+          })),
+          total: total,
+          customerName: user?.name || "Customer"
+        }
+        localStorage.setItem(`khalti-pending-cart-${userId}`, JSON.stringify(cartData))
+      }
+
       await initiateKhaltiPayment(
         total,
         undefined, // reservationId
         "Cafe Order",
         () => {
-          // On success
-          clearCart()
-          alert("Payment successful! Order placed.")
-          window.location.href = "/customer/home"
+          // On success - don't clear cart here, let payment-success page handle it
+          toast({
+            title: "Redirecting to Payment...",
+            description: "Please complete your payment.",
+            variant: "default",
+          })
         },
         (error) => {
           // On error
           console.error("Payment failed:", error)
-          alert("Payment failed. Please try again.")
+          toast({
+            title: "Payment Failed",
+            description: "Please try again.",
+            variant: "destructive",
+          })
         }
       )
       return
     }
 
-    // Handle Cash and eSewa payments
+    // Handle Cash payment
     try {
       const token = localStorage.getItem("accessToken")
       const userData = localStorage.getItem("user")
@@ -60,22 +104,29 @@ export default function CartPage() {
             price: item.price,
           })),
           totalAmount: total,
-          paymentType: paymentMethod,
+          orderPaymentType: paymentMethod,
         }),
       })
 
       if (response.ok) {
         clearCart()
-        alert("Order placed successfully!")
-        // Redirect to homepage
-        window.location.href = "/customer/home"
+        // Redirect to success page
+        window.location.href = `/payment-success?status=success&method=cash&amount=${total.toFixed(2)}`
       } else {
         const errorData = await response.json()
-        alert(errorData.message || "Failed to place order")
+        toast({
+          title: "Order Failed",
+          description: errorData.message || "Failed to place order",
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Checkout failed:", error)
-      alert("Failed to place order")
+      toast({
+        title: "Checkout Failed",
+        description: "Failed to place order. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -175,7 +226,7 @@ export default function CartPage() {
                         name="payment"
                         value="CASH"
                         checked={paymentMethod === "CASH"}
-                        onChange={(e) => setPaymentMethod(e.target.value as "CASH" | "ESEWA" | "KHALTI")}
+                        onChange={(e) => setPaymentMethod(e.target.value as "CASH" | "KHALTI" )}
                         className="mr-3"
                       />
                       <span className="text-sm text-foreground">Cash</span>
@@ -200,7 +251,7 @@ export default function CartPage() {
 
                 {/* Checkout Button */}
                 <Button
-                  onClick={handleCheckout}
+                  onClick={handleCheckoutClick}
                   disabled={isProcessing}
                   className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-10"
                 >
@@ -211,6 +262,24 @@ export default function CartPage() {
           </div>
         </div>
       )}
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Your Order</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to place this order with {paymentMethod === "CASH" ? "Cash" : "Khalti"} payment?
+              <br />
+              <span className="font-semibold mt-2 block">Total Amount: Rs. {total.toFixed(2)}</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCheckout}>Confirm</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

@@ -390,7 +390,6 @@ useEffect(() => {
             >
               <option value="CASH">CASH</option>
               <option value="KHALTI">KHALTI</option>
-              <option value="ESEWA">ESEWA</option>
             </select>
 
             <label>Served At</label>

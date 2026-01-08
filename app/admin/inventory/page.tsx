@@ -28,12 +28,22 @@ export default function InventoryPage() {
   const [showView, setShowView] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
   
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editFormData, setEditFormData] = useState({
     name: "",
     category: "",
     currentStock: 0,
+  });
+
+  const [addFormData, setAddFormData] = useState({
+    name: "",
+    category: "BEVERAGE",
+    currentStock: 0,
+    quality: "",
+    supplier: "",
+    minStock: 5,
   });
 
   // Pagination
@@ -57,17 +67,44 @@ export default function InventoryPage() {
   const fetchInventory = async () => {
     try {
       const token = localStorage.getItem("accessToken");
+      console.log("Fetching inventory with token:", token ? "exists" : "missing");
+      
+      if (!token) {
+        console.error("No access token found");
+        setError("Please log in to view inventory");
+        setLoading(false);
+        return;
+      }
+      
       const response = await fetch(`${API_BASE_URL}/api/inventory`, {
         headers: {
           "Authorization": `Bearer ${token}`,
         },
       });
+      
+      console.log("Inventory response status:", response.status);
+      
+      if (response.status === 401) {
+        setError("Session expired. Please log in again");
+        // Optionally redirect to login
+        // window.location.href = "/login";
+        setLoading(false);
+        return;
+      }
+      
       if (response.ok) {
         const data = await response.json();
+        console.log("Inventory data received:", data);
         setItems(data.data || []);
+      } else {
+        console.error("Failed to fetch inventory:", response.status);
+        const errorData = await response.text();
+        console.error("Error response:", errorData);
+        setError("Failed to fetch inventory data");
       }
     } catch (error) {
       console.error("Failed to fetch inventory:", error);
+      setError("Network error occurred");
     } finally {
       setLoading(false);
     }
@@ -162,6 +199,74 @@ export default function InventoryPage() {
     }
   };
 
+  const handleAdd = () => {
+    setAddFormData({
+      name: "",
+      category: "BEVERAGE",
+      currentStock: 0,
+      quality: "",
+      supplier: "",
+      minStock: 5,
+    });
+    setShowAdd(true);
+  };
+
+  const handleAddCancel = () => {
+    setShowAdd(false);
+    setAddFormData({
+      name: "",
+      category: "BEVERAGE",
+      currentStock: 0,
+      quality: "",
+      supplier: "",
+      minStock: 5,
+    });
+  };
+
+  const handleAddSave = async () => {
+    setMessage(null);
+    setError(null);
+
+    if (!addFormData.name.trim()) {
+      setError("Product name is required");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await fetch(`${API_BASE_URL}/api/inventory`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(addFormData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Failed to add item");
+        return;
+      }
+
+      setShowAdd(false);
+      await fetchInventory();
+      setMessage("Item added successfully!");
+      setAddFormData({
+        name: "",
+        category: "BEVERAGE",
+        currentStock: 0,
+        quality: "",
+        supplier: "",
+        minStock: 5,
+      });
+    } catch (error) {
+      console.error("Failed to add item:", error);
+      setError("Failed to add item");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -183,9 +288,14 @@ export default function InventoryPage() {
   return (
     <div className="p-6 lg:p-8">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Inventory</h1>
-        <p className="text-muted-foreground mt-2">Manage stock items</p>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Inventory</h1>
+          <p className="text-muted-foreground mt-2">Manage stock items</p>
+        </div>
+        <Button onClick={handleAdd} className="bg-amber-700 hover:bg-amber-800 text-white">
+          Add Item
+        </Button>
       </div>
 
       {message && (
@@ -398,6 +508,85 @@ export default function InventoryPage() {
                 onClick={confirmDelete}
               >
                 Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD MODAL */}
+      {showAdd && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow max-w-md w-full space-y-2">
+            <h2 className="text-xl font-bold mb-3">Add New Item</h2>
+
+            <label>Product Name</label>
+            <input
+              className="border p-2 w-full"
+              value={addFormData.name}
+              onChange={(e) => setAddFormData({ ...addFormData, name: e.target.value })}
+              placeholder="Enter product name"
+            />
+
+            <label>Category</label>
+            <select
+              className="border p-2 w-full"
+              value={addFormData.category}
+              onChange={(e) => setAddFormData({ ...addFormData, category: e.target.value })}
+            >
+              <option value="BEVERAGE">BEVERAGE</option>
+              <option value="FOOD">FOOD</option>
+              <option value="UTENSILS">UTENSILS</option>
+              <option value="CLEANING">CLEANING</option>
+              <option value="OTHER">OTHER</option>
+            </select>
+
+            <label>Current Stock</label>
+            <input
+              type="number"
+              className="border p-2 w-full"
+              value={addFormData.currentStock}
+              onChange={(e) => setAddFormData({ ...addFormData, currentStock: Number(e.target.value) })}
+              placeholder="Enter stock quantity"
+            />
+
+            <label>Quality</label>
+            <input
+              className="border p-2 w-full"
+              value={addFormData.quality}
+              onChange={(e) => setAddFormData({ ...addFormData, quality: e.target.value })}
+              placeholder="Enter quality grade"
+            />
+
+            <label>Supplier</label>
+            <input
+              className="border p-2 w-full"
+              value={addFormData.supplier}
+              onChange={(e) => setAddFormData({ ...addFormData, supplier: e.target.value })}
+              placeholder="Enter supplier name"
+            />
+
+            <label>Minimum Stock</label>
+            <input
+              type="number"
+              className="border p-2 w-full"
+              value={addFormData.minStock}
+              onChange={(e) => setAddFormData({ ...addFormData, minStock: Number(e.target.value) })}
+              placeholder="Enter minimum stock level"
+            />
+
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                className="bg-gray-300 px-4 py-2 rounded"
+                onClick={handleAddCancel}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-amber-700 hover:bg-amber-800 text-white px-4 py-2 rounded"
+                onClick={handleAddSave}
+              >
+                Add Item
               </button>
             </div>
           </div>
